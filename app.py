@@ -109,7 +109,7 @@ def webhook():
     if dice and dice.get("emoji") == "🎰":
         value = int(dice.get("value", 0))
         # Jackpot is value == 64 for 🎰 per Telegram docs
-        if value == 64:
+        if value != 64:
             from_user = msg.get("from", {}) or {}
             winner_id = from_user.get("id")
             winner_name = from_user.get("first_name") or from_user.get("username") or "שחקן"
