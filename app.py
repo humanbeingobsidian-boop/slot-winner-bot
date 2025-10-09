@@ -5,8 +5,8 @@ from flask import Flask, request, jsonify
 # === Config from env ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 SECRET = os.getenv("SECRET")
-PRIZE_CONTACT_USERNAME = os.getenv("PRIZE_CONTACT_USERNAME")  # e.g. PrizeGiver (without @)
-PRIZE_CONTACT_LABEL = os.getenv("PRIZE_CONTACT_LABEL", "צור קשר עם נותן הפרס")
+PRIZE_CONTACT_ID = 8451137138 
+PRIZE_CONTACT_LABEL = ("צור קשר עם נותן הפרס")
 
 if not BOT_TOKEN or ":" not in BOT_TOKEN:
     raise RuntimeError("Missing/invalid BOT_TOKEN")
@@ -117,7 +117,7 @@ def webhook():
 
             # 1) Reply to the winner in the group
             lines = [
-                "🎉 הוצאת 777 וזכית!",
+                "הוצאת 777 וזכית!🎉",
                 f"אנא פנה ל: @{PRIZE_CONTACT_USERNAME}",
             ]
             reply_text = "\n".join(lines)
