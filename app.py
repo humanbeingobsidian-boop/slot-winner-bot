@@ -12,8 +12,8 @@ if not BOT_TOKEN or ":" not in BOT_TOKEN:
     raise RuntimeError("Missing/invalid BOT_TOKEN")
 if not SECRET or len(SECRET) < 8:
     raise RuntimeError("Missing/weak SECRET")
-if not PRIZE_CONTACT_USERNAME:
-    raise RuntimeError("Missing PRIZE_CONTACT_USERNAME")
+if not PRIZE_CONTACT_ID:
+    raise RuntimeError("Missing PRIZE_CONTACT_ID")
 
 API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
@@ -73,7 +73,7 @@ def build_message_link(msg: dict) -> str | None:
     return None
 
 def jackpot_reply_markup() -> dict:
-    url = f"https://t.me/{PRIZE_CONTACT_USERNAME}"
+    url = f"https://t.me/{PRIZE_CONTACT_ID}"
     return {"inline_keyboard": [[{"text": PRIZE_CONTACT_LABEL, "url": url}]]}
 
 # -------- Flask routes --------
@@ -118,7 +118,7 @@ def webhook():
             # 1) Reply to the winner in the group
             lines = [
                 "הוצאת 777 וזכית!🎉",
-                f"אנא פנה ל: @{PRIZE_CONTACT_USERNAME}",
+                f"אנא פנה ל: @{PRIZE_CONTACT_ID}",
             ]
             reply_text = "\n".join(lines)
             send_message(chat["id"], reply_text, reply_to=msg.get("message_id"), reply_markup=jackpot_reply_markup())
