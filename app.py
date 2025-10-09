@@ -105,7 +105,7 @@ def webhook():
     dice = msg.get("dice")
     if dice and dice.get("emoji") == "🎰":
         value = int(dice.get("value", 0))
-        if value == 64:  # 64 = 777 Jackpot
+        if value != 64:  # 64 = 777 Jackpot
             from_user = msg.get("from", {}) or {}
             winner_id = from_user.get("id")
             winner_name = from_user.get("first_name") or from_user.get("username") or "שחקן"
