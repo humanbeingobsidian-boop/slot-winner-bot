@@ -6,8 +6,13 @@ from flask import Flask, request, jsonify
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 SECRET = os.getenv("SECRET")
 
-# אם יש לך מזהה מספרי (user id) השאר אותו כמספר/מחרוזת ספרות
-# אם יש לך @username אפשר גם לשים "SomeUser" או "@SomeUser"
+# בעל הבוט (User ID שלך). חובה.
+OWNER_ID = int(os.getenv("OWNER_ID", "0"))
+
+# רשימת הקבוצות המותרות (comma-separated), למשל: "-1001234567890,-100987654321"
+ALLOWED_CHAT_IDS_RAW = os.getenv("ALLOWED_CHAT_IDS", "").strip()
+
+# אם יש לך מזהה מספרי של נותן הפרס – השאר ספרות; אם זה username השתמש ב-@Name או Name
 PRIZE_CONTACT_ID = os.getenv("PRIZE_CONTACT_ID", "8451137138")
 PRIZE_CONTACT_LABEL = os.getenv("PRIZE_CONTACT_LABEL", "צור קשר עם נותן הפרס")
 
@@ -15,11 +20,24 @@ if not BOT_TOKEN or ":" not in BOT_TOKEN:
     raise RuntimeError("Missing/invalid BOT_TOKEN")
 if not SECRET or len(SECRET) < 8:
     raise RuntimeError("Missing/weak SECRET")
-if not PRIZE_CONTACT_ID:
-    raise RuntimeError("Missing PRIZE_CONTACT_ID")
+if OWNER_ID <= 0:
+    raise RuntimeError("Missing/invalid OWNER_ID")
+
+def _parse_chat_ids(raw: str):
+    s = set()
+    for part in raw.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            s.add(int(part))
+        except ValueError:
+            pass
+    return s
+
+ALLOWED_CHATS = _parse_chat_ids(ALLOWED_CHAT_IDS_RAW)
 
 API = f"https://api.telegram.org/bot{BOT_TOKEN}"
-
 app = Flask(__name__)
 
 # ---------- helpers ----------
@@ -70,9 +88,14 @@ def jackpot_button():
         # מזהה מספרי
         url = f"tg://user?id={val}"
     else:
-        # ברירת מחדל – עדיין ננסה כ-username
         url = f"https://t.me/{val.lstrip('@')}"
     return {"inline_keyboard": [[{"text": PRIZE_CONTACT_LABEL, "url": url}]]}
+
+def is_owner(uid):
+    return uid and int(uid) == OWNER_ID
+
+def is_allowed_chat(cid):
+    return cid in ALLOWED_CHATS
 
 # ---------- routes ----------
 @app.route("/")
@@ -81,7 +104,7 @@ def index():
 
 @app.route(f"/{SECRET}", methods=["POST"])
 def webhook():
-    # אם רשמת secret_token ב-setWebhook, טלגרם תצרף header תואם.
+    # אם קבעת secret_token ב-setWebhook, טלגרם תשלח את ההדר הזה:
     hdr = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
     if hdr is not None and hdr != SECRET:
         return "forbidden", 403
@@ -94,20 +117,34 @@ def webhook():
     chat = msg.get("chat", {})
     chat_id = chat.get("id")
     chat_type = chat.get("type")
+    from_user = msg.get("from") or {}
+    user_id = from_user.get("id")
     text = (msg.get("text") or "").strip()
 
-    # עזרה קצרה בפרטי
-    if chat_type == "private" and text.startswith(("/start", "/help")):
-        send_message(chat_id, "🎰 Slot Winner Bot is ready.\nI will notify winners and ping admins on jackpot (777).")
-        return jsonify(ok=True)
+    # --- חסימה ברמת צ'אטים ---
+    if chat_type in {"group", "supergroup", "channel"}:
+        if not is_allowed_chat(chat_id):
+            # מתעלמים לחלוטין אם זו לא קבוצה מורשית
+            return jsonify(ok=True)
 
-    # זיהוי מכונת מזל 🎰
+    # --- חסימה בפרטי: רק הבעלים ---
+    if chat_type == "private":
+        if not is_owner(user_id):
+            # אפשר גם לשלוח הודעה "Private bot" אם תרצה
+            return jsonify(ok=True)
+        # פקודות עזרה וזיהוי
+        if text.startswith(("/start", "/help")):
+            send_message(chat_id, "🎰 Private Slot Winner Bot.\nThis bot is restricted to the owner and approved groups only.")
+            return jsonify(ok=True)
+        if text == "/id":
+            send_message(chat_id, f"your_id: {user_id}\nchat_id: {chat_id}\nallowed_chats: {', '.join(map(str, ALLOWED_CHATS)) or '(none)'}")
+            return jsonify(ok=True)
+
+    # --- לוגיקת הזכייה בקבוצות מורשות ---
     dice = msg.get("dice")
     if dice and dice.get("emoji") == "🎰":
         value = int(dice.get("value", 0))
         if value != 64:  # 64 = 777 Jackpot
-            from_user = msg.get("from", {}) or {}
-            winner_id = from_user.get("id")
             winner_name = from_user.get("first_name") or from_user.get("username") or "שחקן"
             link = build_message_link(msg)
 
@@ -115,18 +152,18 @@ def webhook():
             reply_text = "🎉 הוצאת 777 וזכית!\nאנא פנה לנותן הפרס בלחיצה על הכפתור."
             send_message(chat_id, reply_text, reply_to=msg.get("message_id"), reply_markup=jackpot_button())
 
-            # (2) הודעה פרטית לכל המנהלים
+            # (2) הודעה פרטית למנהלים (Best effort)
             admins = get_admins(chat_id)
             if admins:
                 info = [
                     "🎰 Jackpot detected (777)!",
-                    f"Winner: {winner_name} (id {winner_id})",
+                    f"Winner: {winner_name} (id {from_user.get('id')})",
                     f"Message: {link}" if link else f"Chat: {chat.get('title') or chat_id}, msg_id: {msg.get('message_id')}",
                 ]
                 admin_text = "\n".join(info)
                 for a in admins:
                     uid = a.get("id")
-                    if uid and uid != winner_id:
+                    if uid and uid != from_user.get("id"):
                         try:
                             send_message(uid, admin_text)
                         except Exception as e:
@@ -134,7 +171,7 @@ def webhook():
 
     return jsonify(ok=True)
 
-# --- local run (Render קורא את PORT מהסביבה) ---
+# --- local run ---
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
     app.run(host="0.0.0.0", port=port)
