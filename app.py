@@ -149,20 +149,27 @@ def webhook():
             link = build_message_link(msg)
 
             # (1) תגובה לזוכה בקבוצה
+            winner_id = from_user.get("id")
             winner_username = from_user.get("username")
+            first_name = from_user.get("first_name", "שחקן")
+            
             if winner_username:
                 mention = f"@{winner_username}"
             else:
-                # אם אין לו username ציבורי
-                first_name = from_user.get("first_name", "שחקן")
-                mention = first_name
-                
+                # תיוג אמיתי גם למי שאין לו username
+                mention = f'<a href="tg://user?id={winner_id}">{first_name}</a>'
+            
             reply_text = (
                 f"🎉 כל הכבוד {mention}!\n"
                 f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
                 f"אנא לחץ על הכפתור 👇 כדי לקבל את המתנה 🎁"
             )
-            send_message(chat_id, reply_text, reply_to=msg.get("message_id"), reply_markup=jackpot_button())
+            
+            # חשוב להוסיף parse_mode
+            send_message(chat_id, reply_text,
+                         reply_to=msg.get("message_id"),
+                         reply_markup=jackpot_button(),
+                         parse_mode="HTML")
 
             # (2) הודעה פרטית למנהלים (Best effort)
             admins = get_admins(chat_id)
