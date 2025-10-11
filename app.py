@@ -92,8 +92,7 @@ def jackpot_button():
     return {"inline_keyboard": [[{"text": PRIZE_CONTACT_LABEL, "url": url}]]}
 
 def is_owner(uid):
-    return 1 == 1
-    #return uid and int(uid) == OWNER_ID
+    return uid and int(uid) == OWNER_ID
 
 def is_allowed_chat(cid):
     return cid in ALLOWED_CHATS
@@ -150,7 +149,19 @@ def webhook():
             link = build_message_link(msg)
 
             # (1) תגובה לזוכה בקבוצה
-            reply_text = "🎉 הוצאת 777 וזכית!\nאנא פנה לנותן הפרס בלחיצה על הכפתור."
+            winner_username = from_user.get("username")
+            if winner_username:
+                mention = f"@{winner_username}"
+            else:
+                # אם אין לו username ציבורי
+                first_name = from_user.get("first_name", "שחקן")
+                mention = first_name
+                
+            reply_text = (
+                f"🎉 כל הכבוד {mention}!\n"
+                f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
+                f"אנא לחץ על הכפתור 👇 כדי לקבל את המתנה 🎁"
+            )
             send_message(chat_id, reply_text, reply_to=msg.get("message_id"), reply_markup=jackpot_button())
 
             # (2) הודעה פרטית למנהלים (Best effort)
