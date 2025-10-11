@@ -160,7 +160,7 @@ def webhook():
                 mention = f'<a href="tg://user?id={winner_id}">{first_name}</a>'
             
             reply_text = (
-                f"🎉 כל הכבוד {mention}!\n"
+                f"כל הכבוד {mention}! \n"
                 f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
                 f"אנא לחץ על הכפתור 👇 כדי לקבל את המתנה 🎁"
             )
