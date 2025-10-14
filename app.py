@@ -52,10 +52,26 @@ def send_message(chat_id, text, reply_to=None, reply_markup=None, parse_mode=Non
         payload["parse_mode"] = parse_mode
     try:
         r = requests.post(f"{API}/sendMessage", json=payload, timeout=15)
-        if not r.ok:
+        if r.ok:
+            return r.json().get("result")  # נחזיר את אובייקט ההודעה (כולל message_id)
+        else:
             print("send_message fail:", r.status_code, r.text)
     except Exception as e:
         print("send_message error:", e)
+    return None
+
+def pin_message(chat_id, message_id, silent=True):
+    """ניסיון לנעוץ הודעה. דורש שהבוט יהיה אדמין עם can_pin_messages."""
+    try:
+        r = requests.post(
+            f"{API}/pinChatMessage",
+            json={"chat_id": chat_id, "message_id": message_id, "disable_notification": silent},
+            timeout=10
+        )
+        if not r.ok:
+            print("pin_message fail:", r.status_code, r.text)
+    except Exception as e:
+        print("pin_message error:", e)
 
 def get_admins(chat_id):
     try:
@@ -152,24 +168,32 @@ def webhook():
             winner_id = from_user.get("id")
             winner_username = from_user.get("username")
             first_name = from_user.get("first_name", "שחקן")
-            
+
             if winner_username:
                 mention = f"@{winner_username}"
             else:
                 # תיוג אמיתי גם למי שאין לו username
                 mention = f'<a href="tg://user?id={winner_id}">{first_name}</a>'
-            
+
             reply_text = (
                 f"כל הכבוד {mention}! \n"
                 f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
                 f"אנא לחץ על הכפתור 👇 כדי לקבל את המתנה 🎁"
             )
-            
-            # חשוב להוסיף parse_mode
-            send_message(chat_id, reply_text,
-                         reply_to=msg.get("message_id"),
-                         reply_markup=jackpot_button(),
-                         parse_mode="HTML")
+
+            sent = send_message(
+                chat_id,
+                reply_text,
+                reply_to=msg.get("message_id"),
+                reply_markup=jackpot_button(),
+                parse_mode="HTML"
+            )
+
+            # ננסה לנעוץ את הודעת הזכייה
+            if sent and isinstance(sent, dict):
+                mid = sent.get("message_id")
+                if mid:
+                    pin_message(chat_id, mid, silent=True)
 
             # (2) הודעה פרטית למנהלים (Best effort)
             admins = get_admins(chat_id)
