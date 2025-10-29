@@ -179,11 +179,11 @@ def webhook():
                 mention = f'<a href="tg://user?id={winner_id}">{first_name}</a>'
 
             reply_text = (
-                f"כל הכבוד {mention}! Congratulations \n"
-                f"You got 7️⃣ 7️⃣ 7️⃣ and won the prize"
+                f"כל הכבוד Congratulations {mention}!  \n"
+                f"You got 7️⃣ 7️⃣ 7️⃣ and won the prize\n"
                 f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
                 f"אנא לחץ על הכפתור 👇 כדי לקבל את המתנה 🎁"
-                f"Please click the button 👇 to claim your reward 🎁"
+                f"\nPlease click the button 👇 to claim your reward 🎁"
             )
 
             sent = send_message(
