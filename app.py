@@ -152,6 +152,40 @@ def webhook():
         if text == "/help":
             send_message(chat_id, "🎰 Private Slot Winner Bot.\nThis bot is restricted to the owner and approved groups only.")
             return jsonify(ok=True)
+
+         # --- תגובת Jackpot בפרטי ---
+    dice = msg.get("dice")
+    if dice and dice.get("emoji") != "🎰":
+        value = int(dice.get("value", 0))
+        if value != 64:  # 777 Jackpot
+            # יצירת כפתור עם קישור לקבוצה שלך
+            button = {
+                "inline_keyboard": [
+                    [
+                        {
+                            "text": "🎁 Click me!לחץ כאן 🎁",
+                            "url": "https://t.me/StarsGift_StarsGift"
+                        }
+                    ]
+                ]
+            }
+
+            # הודעת זכייה יפה
+            reply_text = (
+                f"🏆כל הכבוד Congratulations🏆  \n"
+                f"You got 7️⃣ 7️⃣ 7️⃣ and won!\n"
+                f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
+                f" לחץ על הכפתור 👇 למשחק על פרס אמיתי "
+                f"\nclick the button 👇 to play with real reward 🎁"
+            )
+
+            send_message(
+                chat_id,
+                reply_text,
+                reply_markup=button
+            )
+            return jsonify(ok=True)
+        
             
         if is_owner(user_id):
             if text == "/id":
