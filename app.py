@@ -149,7 +149,10 @@ def webhook():
             # אפשר גם לשלוח הודעה "Private bot" אם תרצה
             return jsonify(ok=True)
         # פקודות עזרה וזיהוי
-        if text.startswith(("/start", "/help")):
+        if text == "/start":
+            send_message(chat_id, "שלח את האימוג׳י 🎰 ואולי תזכה! \nSend the 🎰 emoji and maybe you’ll win big!")
+            return jsonify(ok=True)
+        if text == "/help":
             send_message(chat_id, "🎰 Private Slot Winner Bot.\nThis bot is restricted to the owner and approved groups only.")
             return jsonify(ok=True)
         if text == "/id":
@@ -176,9 +179,11 @@ def webhook():
                 mention = f'<a href="tg://user?id={winner_id}">{first_name}</a>'
 
             reply_text = (
-                f"כל הכבוד {mention}! \n"
+                f"כל הכבוד {mention}! Congratulations \n"
+                f"You got 7️⃣ 7️⃣ 7️⃣ and won the prize"
                 f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
                 f"אנא לחץ על הכפתור 👇 כדי לקבל את המתנה 🎁"
+                f"Please click the button 👇 to claim your reward 🎁"
             )
 
             sent = send_message(
