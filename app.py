@@ -143,7 +143,7 @@ def webhook():
             # מתעלמים לחלוטין אם זו לא קבוצה מורשית
             return jsonify(ok=True)
 
-    # --- חסימה בפרטי: רק הבעלים ---
+    # --- בפרטי: ---
     if chat_type == "private":
         # פקודות עזרה וזיהוי
         if text == "/start":
@@ -153,47 +153,39 @@ def webhook():
             send_message(chat_id, "🎰 Private Slot Winner Bot.\nThis bot is restricted to the owner and approved groups only.")
             return jsonify(ok=True)
 
-         # --- תגובת Jackpot בפרטי ---
-    dice = msg.get("dice")
-    if dice and dice.get("emoji") == "🎰":
-        value = int(dice.get("value", 0))
-        if value != 64:  # 777 Jackpot
-            # יצירת כפתור עם קישור לקבוצה שלך
-            button = {
-                "inline_keyboard": [
-                    [
-                        {
-                            "text": "🎁 Click me!לחץ כאן 🎁",
-                            "url": "https://t.me/StarsGift_StarsGift"
-                        }
+        # --- תגובת Jackpot בפרטי ---
+        dice = msg.get("dice")
+        if dice and dice.get("emoji") == "🎰":
+            value = int(dice.get("value", 0))
+            if value != 64:  # 777 Jackpot
+                # יצירת כפתור עם קישור לקבוצה שלך
+                button = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "🎁 Click me!לחץ כאן 🎁",
+                                "url": "https://t.me/StarsGift_StarsGift"
+                            }
+                        ]
                     ]
-                ]
-            }
-
-            # הודעת זכייה יפה
-            reply_text = (
-                f"🏆כל הכבוד Congratulations🏆  \n"
-                f"You got 7️⃣ 7️⃣ 7️⃣ and won!\n"
-                f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
-                f" לחץ על הכפתור 👇 למשחק על פרס אמיתי "
-                f"\nclick the button 👇 to play with real reward 🎁"
-            )
-
-            send_message(
-                chat_id,
-                reply_text,
-                reply_markup=button
-            )
-            return jsonify(ok=True)
+                }
+    
+                # הודעת זכייה יפה
+                reply_text = (
+                    f"🏆כל הכבוד Congratulations🏆  \n"
+                    f"You got 7️⃣ 7️⃣ 7️⃣ and won!\n"
+                    f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
+                    f" לחץ על הכפתור 👇 למשחק על פרס אמיתי "
+                    f"\nclick the button 👇 to play with real reward 🎁"
+                )
+    
+                send_message(
+                    chat_id,
+                    reply_text,
+                    reply_markup=button
+                )
+                return jsonify(ok=True)
         
-            
-        if is_owner(user_id):
-            if text == "/id":
-                send_message(chat_id, f"your_id: {user_id}\nchat_id: {chat_id}\nallowed_chats: {', '.join(map(str, ALLOWED_CHATS)) or '(none)'}")
-            # אפשר גם לשלוח הודעה "Private bot" אם תרצה
-            return jsonify(ok=True)
-            
-        return jsonify(ok=True)
 
     # --- לוגיקת הזכייה בקבוצות מורשות ---
     dice = msg.get("dice")
