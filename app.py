@@ -155,7 +155,7 @@ def webhook():
 
          # --- תגובת Jackpot בפרטי ---
     dice = msg.get("dice")
-    if dice and dice.get("emoji") != "🎰":
+    if dice and dice.get("emoji") == "🎰":
         value = int(dice.get("value", 0))
         if value != 64:  # 777 Jackpot
             # יצירת כפתור עם קישור לקבוצה שלך
