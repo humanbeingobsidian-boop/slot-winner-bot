@@ -157,7 +157,7 @@ def webhook():
         dice = msg.get("dice")
         if dice and dice.get("emoji") == "🎰":
             value = int(dice.get("value", 0))
-            if value != 64:  # 777 Jackpot
+            if value == 64:  # 777 Jackpot
                 # יצירת כפתור עם קישור לקבוצה שלך
                 button = {
                     "inline_keyboard": [
@@ -191,7 +191,7 @@ def webhook():
     dice = msg.get("dice")
     if dice and dice.get("emoji") == "🎰":
         value = int(dice.get("value", 0))
-        if value != 64:  # 64 = 777 Jackpot
+        if value == 64:  # 64 = 777 Jackpot
             winner_name = from_user.get("first_name") or from_user.get("username") or "שחקן"
             link = build_message_link(msg)
 
