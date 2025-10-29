@@ -145,9 +145,6 @@ def webhook():
 
     # --- חסימה בפרטי: רק הבעלים ---
     if chat_type == "private":
-        if not is_owner(user_id):
-            # אפשר גם לשלוח הודעה "Private bot" אם תרצה
-            return jsonify(ok=True)
         # פקודות עזרה וזיהוי
         if text == "/start":
             send_message(chat_id, "שלח את האימוג׳י 🎰 ואולי תזכה! \nSend the 🎰 emoji and maybe you’ll win big!")
@@ -155,9 +152,14 @@ def webhook():
         if text == "/help":
             send_message(chat_id, "🎰 Private Slot Winner Bot.\nThis bot is restricted to the owner and approved groups only.")
             return jsonify(ok=True)
-        if text == "/id":
-            send_message(chat_id, f"your_id: {user_id}\nchat_id: {chat_id}\nallowed_chats: {', '.join(map(str, ALLOWED_CHATS)) or '(none)'}")
+            
+        if is_owner(user_id):
+            if text == "/id":
+                send_message(chat_id, f"your_id: {user_id}\nchat_id: {chat_id}\nallowed_chats: {', '.join(map(str, ALLOWED_CHATS)) or '(none)'}")
+            # אפשר גם לשלוח הודעה "Private bot" אם תרצה
             return jsonify(ok=True)
+            
+        return jsonify(ok=True)
 
     # --- לוגיקת הזכייה בקבוצות מורשות ---
     dice = msg.get("dice")
@@ -179,8 +181,8 @@ def webhook():
                 mention = f'<a href="tg://user?id={winner_id}">{first_name}</a>'
 
             reply_text = (
-                f"כל הכבוד Congratulations {mention}!  \n"
-                f"You got 7️⃣ 7️⃣ 7️⃣ and won the prize\n"
+                f"🏆כל הכבוד Congratulations {mention}🏆  \n"
+                f"You got 7️⃣ 7️⃣ 7️⃣ and won the prize!\n"
                 f"הוצאת 7️⃣ 7️⃣ 7️⃣ וזכית!\n\n"
                 f"אנא לחץ על הכפתור 👇 כדי לקבל את המתנה 🎁"
                 f"\nPlease click the button 👇 to claim your reward 🎁"
